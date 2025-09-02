@@ -1,0 +1,53 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<div class="layout">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main class="main">
+    <header class="topbar">
+      <button id="menuToggle" class="menu-btn" aria-label="Open menu">
+        <svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <h1>Codes</h1>
+    </header>
+    <div class="content">
+      <div id="loader" style="display:none">Loading...</div>
+      <form id="codeForm" class="card form-grid">
+        <label>
+          <span>Withdraw</span>
+          <select id="withdrawSelect"></select>
+        </label>
+        <label>
+          <span>Code</span>
+          <input type="text" id="code" placeholder="Enter Code">
+        </label>
+        <button type="submit" class="btn">Submit</button>
+      </form>
+    </div>
+  </main>
+</div>
+<script src="sidebar.js"></script>
+<script>
+const DEPLOY_URL="https://script.google.com/macros/s/AKfycbzBKUq345lKmaW_keGT5vlsdAsjySdpdKuHDG5eSgwDSKt2EJmXwDdsD5BszjbtGFLY5g/exec";
+let withdraws=[];
+function showLoader(show){document.getElementById("loader").style.display=show?"block":"none"}
+fetch(DEPLOY_URL+"?type=withdrawlist").then(r=>r.json()).then(data=>{
+  withdraws=data;
+  const select=document.getElementById("withdrawSelect");
+  withdraws.forEach(w=>{
+    let opt=document.createElement("option");
+    opt.value=w.id;
+    opt.textContent="₹"+w.rupee+" ("+w.coins+" Coins)";
+    select.appendChild(opt);
+  });
+});
+document.getElementById("codeForm").onsubmit=(e)=>{
+  e.preventDefault();
+  showLoader(true);
+  const wid=document.getElementById("withdrawSelect").value;
+  const code=document.getElementById("code").value;
+  fetch(DEPLOY_URL,{method:"POST",body:JSON.stringify({withdrawid:wid,code:code,action:"addcode"})})
+    .then(()=>{showLoader(false);alert("Code Added")});
+};
+</script>

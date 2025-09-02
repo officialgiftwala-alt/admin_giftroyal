@@ -1,0 +1,58 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<style>
+    .btn { width: 100%; }
+</style>
+<div class="app">
+  <aside id="sidebar" class="sidebar"></aside>
+  <div class="content">
+    <div class="topbar">
+      <button id="menuToggle" class="menu-btn" aria-label="Menu">
+        <svg viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="title">Extra</div>
+    </div>
+    <main class="main">
+      <div class="container">
+        <div id="overlay"></div>
+        <div id="loader"></div>
+        <div class="card section grid">
+          <form id="extraForm" class="grid">
+            <div class="choose"><label for="image">Choose Image</label></div>
+            <input type="file" id="image" accept="image/*">
+            <input type="text" id="title" placeholder="Enter Title">
+            <input type="number" id="coins" placeholder="Enter Coins">
+            <input type="text" id="url" placeholder="Enter URL">
+            <div class="actions"><button type="submit" class="btn">Submit</button></div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="sidebar.js"></script>
+<script>
+const DEPLOY_URL="https://script.google.com/macros/s/AKfycbxA5wmMTTh4tfZxuzAn-YUByCsbJ93odTp6oBVAIvSHN40RFmEQo-Wm6UR24QF-a79t6w/exec";
+const API_KEY="5ee8338b80aa6e72c63fdba3755f9f52";
+function showLoader(show){document.getElementById("loader").style.display=show?"grid":"none"}
+document.getElementById("extraForm").onsubmit=(e)=>{
+  e.preventDefault();
+  showLoader(true);
+  const file=document.getElementById("image").files[0];
+  const title=document.getElementById("title").value;
+  const coins=document.getElementById("coins").value;
+  const url=document.getElementById("url").value;
+  const formData=new FormData();
+  formData.append("image",file);
+  fetch("https://api.imgbb.com/1/upload?key="+API_KEY,{method:"POST",body:formData})
+    .then(r=>r.json())
+    .then(res=>{
+      const imageUrl=res.data.url;
+      fetch(DEPLOY_URL,{method:"POST",body:JSON.stringify({image:imageUrl,title:title,coins:coins,url:url,action:"addextra"})})
+        .then(()=>{showLoader(false);alert("Extra Added")});
+    });
+};
+</script>

@@ -1,0 +1,100 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<div class="layout">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main class="main">
+    <header class="topbar">
+      <button id="menuToggle" class="menu-btn" aria-label="Open sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24"><path d="M4 6h10M4 12h16M4 18h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <h1>Withdraw</h1>
+    </header>
+    <div class="content">
+      <div id="loader" style="display:none">Loading...</div>
+      <form id="withdrawForm" class="card form-grid">
+        <label>
+          <span>Image</span>
+          <input type="file" id="image" accept="image/*">
+        </label>
+        <label>
+          <span>Coins</span>
+          <input type="number" id="coins" placeholder="Enter Coins">
+        </label>
+        <label>
+          <span>Rupee</span>
+          <input type="number" id="rupee" placeholder="Enter Rupee">
+        </label>
+        <button type="submit" class="btn">Submit</button>
+      </form>
+      <div id="withdrawList" class="grid"></div>
+      <div id="alertBox" class="modal">
+        <div class="card" style="max-width:340px;text-align:center">
+          <p>Do you really want to delete?</p>
+          <div class="actions">
+            <button id="yesBtn" class="btn danger" type="button">Yes</button>
+            <button id="noBtn" class="btn ghost" type="button">No</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="sidebar.js"></script>
+<script>
+const DEPLOY_URL="https://script.google.com/macros/s/AKfycbw1jiFesym-D-HrKR9coTakccEv6WlJqcNlmBccd7N67z0-UwYnMABySCIuB-T5PgWb-g/exec";
+const API_KEY="5ee8338b80aa6e72c63fdba3755f9f52";
+let deleteId=null;
+function showLoader(x){document.getElementById("loader").style.display=x?"block":"none"}
+async function postJSON(url,data){
+  try{
+    return await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+  }catch(e){
+    return fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+  }
+}
+function loadWithdraws(){
+  const list=document.getElementById("withdrawList");
+  list.innerHTML="";
+  fetch(DEPLOY_URL+"?type=withdrawlist&t="+Date.now()).then(r=>r.json()).then(data=>{
+    data.forEach(w=>{
+      let card=document.createElement("div");card.className="card row fade-in";
+      let img=document.createElement("img");img.src=w.image;img.alt="Withdraw";img.className="thumb";
+      let info=document.createElement("div");info.className="row-main";
+      let meta1=document.createElement("div");meta1.className="title";meta1.textContent="₹"+w.rupee;
+      let meta2=document.createElement("div");meta2.className="muted";meta2.textContent=w.coins+" Coins";
+      let actions=document.createElement("div");actions.className="actions";
+      let del=document.createElement("button");del.type="button";del.className="btn danger";del.textContent="Delete";
+      del.onclick=()=>{deleteId=w.id;document.getElementById("alertBox").style.display="flex"};
+      info.appendChild(meta1);info.appendChild(meta2);actions.appendChild(del);
+      card.appendChild(img);card.appendChild(info);card.appendChild(actions);
+      list.appendChild(card);
+    });
+  });
+}
+document.getElementById("withdrawForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  showLoader(true);
+  const file=document.getElementById("image").files[0];
+  const coins=document.getElementById("coins").value.trim();
+  const rupee=document.getElementById("rupee").value.trim();
+  let imageUrl="";
+  if(file){
+    const fd=new FormData();fd.append("image",file);
+    const up=await fetch("https://api.imgbb.com/1/upload?key="+API_KEY,{method:"POST",body:fd});
+    const res=await up.json();imageUrl=res?.data?.url||"";
+  }
+  await postJSON(DEPLOY_URL,{image:imageUrl,coins,rupee,action:"addwithdraw"});
+  showLoader(false);
+  loadWithdraws();
+  e.currentTarget.reset();
+});
+document.getElementById("yesBtn").onclick=async ()=>{
+  await postJSON(DEPLOY_URL,{id:deleteId,action:"deletewithdraw"});
+  document.getElementById("alertBox").style.display="none";
+  loadWithdraws();
+};
+document.getElementById("noBtn").onclick=()=>{document.getElementById("alertBox").style.display="none"};
+loadWithdraws();
+</script>

@@ -1,0 +1,52 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="loader.css">
+<div class="layout">
+  <aside id="sidebar" class="sidebar"></aside>
+  <main class="main">
+    <header class="topbar">
+      <button id="menuToggle" class="menu-btn" aria-label="Open menu">
+        <svg width="24" height="24" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+      </button>
+      <h1>Requests</h1>
+    </header>
+    <div class="content">
+      <div id="loader">Loading...</div>
+      <div id="requestList" class="grid"></div>
+    </div>
+  </main>
+</div>
+<script src="sidebar.js"></script>
+<script>
+const DEPLOY_URL="https://script.google.com/macros/s/AKfycbwyjWajpbSn7fBtYbwUNgJ5hPhbgKokouXc6C2ZJ-hvHv3RJC6Wh3USdcWwObLbdGEMBA/exec";
+function showLoader(show){document.getElementById("loader").style.display=show?"block":"none"}
+function loadRequests(){
+  document.getElementById("requestList").innerHTML="";
+  fetch(DEPLOY_URL+"?type=requests").then(r=>r.json()).then(data=>{
+    data.forEach(rq=>{
+      let card=document.createElement("div");card.className="card row";
+      let img=document.createElement("img");img.src=rq.image;img.alt=rq.taskname;img.className="thumb";
+      let info=document.createElement("div");info.className="row-main";
+      let title=document.createElement("div");title.className="title";title.textContent=rq.taskname;
+      let coins=document.createElement("div");coins.className="muted";coins.textContent=rq.coins+" Coins";
+      let actions=document.createElement("div");actions.className="actions";
+      let btn1=document.createElement("button");btn1.className="btn";btn1.textContent="Accept";
+      btn1.onclick=()=>{
+        fetch(DEPLOY_URL,{method:"POST",body:JSON.stringify({userid:rq.userid,taskid:rq.taskid,coins:rq.coins,action:"accept"})})
+          .then(()=>loadRequests());
+      };
+      let btn2=document.createElement("button");btn2.className="btn ghost";btn2.textContent="Reject";
+      btn2.onclick=()=>{
+        fetch(DEPLOY_URL,{method:"POST",body:JSON.stringify({userid:rq.userid,taskid:rq.taskid,action:"reject"})})
+          .then(()=>loadRequests());
+      };
+      info.appendChild(title);info.appendChild(coins);actions.appendChild(btn1);actions.appendChild(btn2);
+      card.appendChild(img);card.appendChild(info);card.appendChild(actions);
+      document.getElementById("requestList").appendChild(card);
+    });
+    showLoader(false);
+  });
+}
+loadRequests();
+</script>

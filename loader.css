@@ -1,0 +1,30 @@
+#loader {
+  position: fixed;
+  inset: auto 16px 16px auto;
+  z-index: 100;
+  background: #000000b3;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  backdrop-filter: saturate(180%) blur(6px);
+}
+
+#loader::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  border-right-color: transparent;
+  margin-right: 8px;
+  vertical-align: -2px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
